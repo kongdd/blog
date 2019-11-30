@@ -23,23 +23,6 @@ output:
 
 <div id="傅里叶变换" class="section level1">
 <h1><span class="header-section-number">1</span> 傅里叶变换</h1>
-<pre class="c"><code>#include &lt;stdio.h&gt;
-int main(void)
-{
-  printf(&quot;Hello world!&quot;),
-  return 0;
-}</code></pre>
-<pre class="r"><code>wave.3 &lt;- 0.5 * wave.1 + 0.25 * wave.2
-plot(xs,wave.3,type=&quot;l&quot;) 
-title(&quot;Eg complex wave&quot;)
-abline(h=0,lty=3)
-
-repeat.xs     &lt;- seq(-2*pi,0,pi/100)
-wave.3.repeat &lt;- 0.5*sin(3*repeat.xs) + 0.25*sin(10*repeat.xs)
-plot(xs,wave.3,type=&quot;l&quot;) 
-title(&quot;Repeating pattern&quot;)
-points(repeat.xs,wave.3.repeat,type=&quot;l&quot;,col=&quot;red&quot;) 
-abline(h=0,v=c(-2*pi,0),lty=3)</code></pre>
 <div id="离散型傅里叶变换" class="section level2">
 <h2><span class="header-section-number">1.1</span> 离散型傅里叶变换</h2>
 <p><strong>主要公式：</strong>
