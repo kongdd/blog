@@ -1,0 +1,48 @@
+{{ if and (not .Params.disable_highlight) (in (string .Content) "</pre>") }}
+    {{ $highTheme := .Site.Params.highlightjsTheme }}
+    {{ with .Site.Params.highlightjsVersion }}
+        <link
+            href='{{ $.Site.Params.highlightjsCDN | default "//cdnjs.cloudflare.com/ajax/libs" }}/highlight.js/{{ . }}/styles/{{ $highTheme }}.min.css'
+            rel='stylesheet' type='text/css' />
+    {{ end }}
+{{ end }}
+
+<!-- highlight -->
+{{ if and (not .Params.disable_highlight) (in (string .Content) "</pre>") }}
+{{ $highVer := .Site.Params.highlightjsVersion }}
+{{ $highCDN := (.Site.Params.highlightjsCDN | default "//cdnjs.cloudflare.com/ajax/libs") }}
+{{ if (not (eq $highVer "")) }}
+    <script src="{{ $highCDN }}/highlight.js/{{ $highVer }}/highlight.min.js"></script>
+    {{ $.Scratch.Set "highLangs" .Site.Params.highlightjsLang }}
+        {{ range .Params.highlightjsLang }}{{ $.Scratch.Add "highLangs" . }}{{ end }}
+        {{ range ($.Scratch.Get "highLangs") }}
+            <script src="{{ $highCDN }}/highlight.js/{{ $highVer }}/languages/{{ . }}.min.js"></script>
+        {{ end }}
+        <script>hljs.configure({ languages: [] }); hljs.initHighlightingOnLoad();</script>
+    {{ end }}
+{{ end }}
+
+<!-- <link href="https://cdn.bootcss.com/highlight.js/9.12.0/styles/monokai.min.css" rel="stylesheet">
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script> -->
+<!-- <script>hljs.initHighlightingOnLoad();</script> -->
+
+<script src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+<script>
+$(function() { // .ready() callback, is only executed when the DOM is fully loaded
+    function $$(selector, context) {
+        context = context || document;
+        var elements = context.querySelectorAll(selector);
+        return Array.prototype.slice.call(elements);
+    }
+    var x, comments = $$("span > .hljs-comment");
+    for (i = 0; i < comments.length; i++) {
+        x = comments[i];
+        x.parentNode.outerHTML = x.outerHTML;
+    }
+    // var length = $("p").length;
+    // The following will log 1 to the console, as the paragraph exists.
+    // This is the evidence that this method is only called when the
+    // DOM is fully loaded
+    // console.log(length);
+});
+</script>

@@ -1,0 +1,91 @@
+---
+title: "Fourier curve fitting for periodic component"
+author: "Dongdong Kong"
+date: 2015-08-03T21:13:14-05:00
+categories: ["R"]
+tags: ["R Markdown", "plot", "regression"]
+output: 
+  blogdown::html_page:
+    toc: true
+    number_sections: true
+---
+
+# 傅里叶变换
+
+
+``` c
+#include <stdio.h>
+int main(void)
+{
+  printf("Hello world!"),
+  return 0;
+}
+```
+
+```{r pressure, echo=TRUE, eval=FALSE}
+wave.3 <- 0.5 * wave.1 + 0.25 * wave.2
+plot(xs,wave.3,type="l") 
+title("Eg complex wave")
+abline(h=0,lty=3)
+
+repeat.xs     <- seq(-2*pi,0,pi/100)
+wave.3.repeat <- 0.5*sin(3*repeat.xs) + 0.25*sin(10*repeat.xs)
+plot(xs,wave.3,type="l") 
+title("Repeating pattern")
+points(repeat.xs,wave.3.repeat,type="l",col="red") 
+abline(h=0,v=c(-2*pi,0),lty=3)
+```
+
+## 离散型傅里叶变换
+
+**主要公式：**
+$$
+\begin{equation}
+X t=\frac{a_{0}}{2}+\sum_{i=1}^{m}\left[a_{i} \cos \left(\frac{2 \pi i}{N} t\right)+b_{i} \sin \left(\frac{2 \pi i}{N} t\right)\right]
+\end{equation}
+$$
+
+
+*   频率$fs=1/T$，采样频率，单位时间发生的次数，单位为赫兹Hz。例如一般mp3音乐采样频率为44,100 Hz
+
+*   周期$T=1/f$
+*   角速度$w = 2πf$
+
+## 快速傅里叶变换
+
+$$
+\begin{equation}
+x[i]=\sum_{k=0}^{N / 2} \operatorname{Re} \overline{X}[k] \cos (2 \pi k i / N)+\sum_{k=0}^{N / 2} \operatorname{Im} \overline{X}[k] \sin (2 \pi k i / N)
+\end{equation}
+$$
+
+其中$\overline{X}[k]$是快速傅里叶变化的时间序列、$k$为谐波数、$i$代表时间、$N$为时间序列的长度；
+
+令$z_{i} = 2 \pi  i / N$，则`Eq. 1`变身为：
+$$
+\begin{equation}
+x[i]=\sum_{k=0}^{N / 2} \operatorname{Re} \overline{X}[k] \cos (k z_i)+\sum_{k=0}^{N / 2} \operatorname{Im} \overline{X}[k] \sin (k z_i)
+\end{equation}
+$$
+
+其中
+$$
+\begin{equation}
+\begin{array}{l}{
+\operatorname{Re} \overline{X}[k]=\frac{\operatorname{Re} X[k]}{N / 2}}, 
+a_n= \operatorname{Re} \overline{X}\\ 
+{\operatorname{Im} \overline{X}[k]=-\frac{\operatorname{Im} X[k]}{N / 2}}, 
+b_n= \operatorname{Im} \overline{X}\end{array}
+\end{equation}
+$$
+
+当$k=0, or N/2 $时
+$$
+\begin{equation}
+\begin{aligned} \operatorname{Re} \overline{X}[0] &=\frac{\operatorname{Re} X[0]}{N} \\ \operatorname{Re} \overline{X}[N / 2] &=\frac{\operatorname{Re} X[N / 2]}{N} \end{aligned}
+\end{equation}
+$$
+
+# References
+
+*   [十、从头到尾彻底理解傅里叶变换算法、上](https://blog.csdn.net/v_JULY_v/article/details/6196862)

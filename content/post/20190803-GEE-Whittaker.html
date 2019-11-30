@@ -1,0 +1,87 @@
+---
+title: "GEE Whittaker smoother"
+author: "Dongdong Kong"
+date: 2019-08-03T21:13:14-05:00
+categories: ["R"]
+tags: ["R Markdown", "plot", "regression"]
+output: 
+  blogdown::html_page:
+    toc: true
+    number_sections: true
+---
+
+
+<div id="TOC">
+<ul>
+<li><a href="#whittaker介绍"><span class="toc-section-number">1</span> Whittaker介绍</a></li>
+<li><a href="#bisquare权重调整modified-bisquare-weights-updating"><span class="toc-section-number">2</span> <code>bisquare</code>权重调整(Modified <code>bisquare</code> weights updating )</a></li>
+<li><a href="#生成新的时间序列-generating-new-time-series"><span class="toc-section-number">3</span> 生成新的时间序列 (Generating new time series)</a></li>
+<li><a href="#references"><span class="toc-section-number">4</span> References</a></li>
+</ul>
+</div>
+
+<div id="whittaker介绍" class="section level1">
+<h1><span class="header-section-number">1</span> Whittaker介绍</h1>
+<p>不可否认<code>Savitzky-Golay (SG)</code>是一个非常优秀的平滑算法，奈何计算效率太低，使其在Google Earth Engine (GEE) 根本无法使用。两年过去了，很多GEE developers依然执着于SG，不断问SG在GEE上如何应用。</p>
+<p>由于SG是一个逐步回归，回归次数较多，因此他通常会比HANTS, Whittaker慢几十倍，在GEE上应用基本无望。</p>
+<p>本文主要介绍一种改进的Whittaker，特意为GEE设计的一个平滑算法: weighted Whittaker with dynamic
+lambda。它主要在两个方面对Whittaker进行了改进:</p>
+<ol style="list-style-type: decimal">
+<li><p>自动优化Whittaker的参数lambda，根据植被曲线特征指数(mean, sd, cv, skewness and kurtosis)</p></li>
+<li><p>加入weights updating function (modified Bisquare)</p></li>
+</ol>
+<blockquote>
+<p>The calibration and validation script in R language is available in <a href="https://github.com/kongdd/gee_whittaker" class="uri">https://github.com/kongdd/gee_whittaker</a>.<br />
+The GEE Whittaker is available in <a href="https://github.com/kongdd/gee_packages/blob/master/Math/pkg_whit.js" class="uri">https://github.com/kongdd/gee_packages/blob/master/Math/pkg_whit.js</a>.</p>
+</blockquote>
+<!-- 涉及内容包括lambda 初始值 -->
+<!-- # 上下边界(vegetation index boundary) -->
+</div>
+<div id="bisquare权重调整modified-bisquare-weights-updating" class="section level1">
+<h1><span class="header-section-number">2</span> <code>bisquare</code>权重调整(Modified <code>bisquare</code> weights updating )</h1>
+<p>在加权线性回归（weighted linear regression）中，<code>bisquare</code>是最常用的权重调整函数之一。其主要是根据残差的大小，调整输入的拟合点的权重，具体公式如下：</p>
+<p><span class="math display">\[
+\begin{equation}
+w\left(r_{i}^{k}\right)=\left\{\begin{array}{ll}{\left(1-\left(r_{i}^{k} / 6 s\right)^{2}\right)^{2},} &amp; {\left|r_{i}^{k}\right|&lt;6 s} \\ {0,} &amp; {\left|r_{i}^{k}\right| \geqslant 6 s}\end{array}\right.
+\end{equation}
+\]</span></p>
+<p><strong>在应用到平滑遥感植被指数时间序列时，需要根据植被指数被污染时的特征来修改<code>bisqure</code>，修改<code>bisquare</code>时考虑以下准则:</strong></p>
+<ol style="list-style-type: decimal">
+<li><p>遥感植被指数，被云、雨、雪、气溶胶等污染时一般会偏低。因此在拟合植被生长曲线的时候，这些点一般会位于拟合曲线的下方。</p>
+<p>令残差<span class="math inline">\(re = Y_{pred} - Y\)</span>，其中<span class="math inline">\(Y_{pred}\)</span>是平滑之后的时间序列。</p>
+<p>则被污染的点，一般<span class="math inline">\(re &gt; 0\)</span></p></li>
+<li><p>此外，考虑到卫星太阳高度角过低时，会使得观测到的波段有较大的误差，此时会存在一些异离群点（outliers）。参考<code>bisquare</code>的做法，定义 <span class="math inline">\(abs(res) &gt; 6s\)</span> (其中<span class="math inline">\(s = median(re)\)</span>的点为离群点。这些离群点也不可依赖，需要给他们较低的权重<span class="math inline">\(w_{min}\)</span>。</p></li>
+<li><p>坏的点，即使看起来很好，调整权重时要对其特殊照顾。具体实现上，可以采用上一次的权重乘以本地权重调整的系数 <span class="math inline">\(w_{i}^{k-1}\left(1-\left(r_{i}^{k} / 6 s\right)^{2}\right)^{2}\)</span>。</p></li>
+</ol>
+<p>基于此修改后的<code>bisquare</code>变身为:</p>
+<p><span class="math display">\[
+\begin{equation}
+\begin{array}
+{l}{w\left(r_{i}^{k}\right)}{\quad=\left\{
+\begin{array}{ll}{
+w_{i}^{k-1}\left(1-\left(r_{i}^{k} / 6 s\right)^{2}\right)^{2},} &amp; 
+{0 &lt; r_{i}&lt;6 s} \\ 
+{w_{min},} &amp; {\left|r_i^k\right| \geqslant 6s} \\ 
+{w_{i}^{k-1}, } &amp; { -6s &lt; r_{i} \leqslant 0} \end{array}\right.} \end{array}
+\end{equation}
+\]</span></p>
+<p>需要注意的是，<span class="math inline">\(w_{min}\)</span>应该大于0。因为在冬季，植被指数被积雪污染是很常见的事，我们需要这些被积雪污染的点来平衡、划分植被生长周期，而不是把他们权重设置成0，完全忽略。</p>
+</div>
+<div id="生成新的时间序列-generating-new-time-series" class="section level1">
+<h1><span class="header-section-number">3</span> 生成新的时间序列 (Generating new time series)</h1>
+<ul>
+<li>为了趋近植被指数序列<span class="math inline">\(y\)</span>的上方包络线，在每次迭代中我们需要适当的向上调整<span class="math inline">\(y_i^{k-1}\)</span>（其中i表示时间序列中的第<code>i</code>个点, <span class="math inline">\(k\)</span>表示第<span class="math inline">\(k\)</span>次迭代），即。</li>
+<li>当平滑后的曲线过于平滑时，在非生长季会存在明显的高估。如果继续向上取上方包络线，植被生长周期就会被覆盖掉。因此为了避免这种情况，我们只对生长季的植被指数调整<span class="math inline">\(y_i^{k}\)</span>。</li>
+</ul>
+<p><span class="math display">\[
+\begin{equation}
+y_{i}^{k}=\left\{\begin{array}{cl}{y_{i}^{n e w},} &amp; {r_{i}&gt;0, Growing\;season} \\ {y_{i}^{k-1},} &amp; {r_{i} \leqslant 0, or\; Nongrowing\;season}\end{array}\right.
+\end{equation}
+\]</span></p>
+</div>
+<div id="references" class="section level1">
+<h1><span class="header-section-number">4</span> References</h1>
+<blockquote>
+<p>[1]. Kong, D., Zhang, Y., Gu, X., &amp; Wang, D. (2019). A robust method for reconstructing global MODIS EVI time series on the Google Earth Engine. <em>ISPRS Journal of Photogrammetry and Remote Sensing</em>, <em>155</em>(May), 13–24. <a href="https://doi.org/10.1016/j.isprsjprs.2019.06.014" class="uri">https://doi.org/10.1016/j.isprsjprs.2019.06.014</a></p>
+</blockquote>
+</div>

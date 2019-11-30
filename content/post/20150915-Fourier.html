@@ -1,0 +1,94 @@
+---
+title: "Fourier curve fitting for periodic component"
+author: "Dongdong Kong"
+date: 2015-08-03T21:13:14-05:00
+categories: ["R"]
+tags: ["R Markdown", "plot", "regression"]
+output: 
+  blogdown::html_page:
+    toc: true
+    number_sections: true
+---
+
+
+<div id="TOC">
+<ul>
+<li><a href="#傅里叶变换"><span class="toc-section-number">1</span> 傅里叶变换</a><ul>
+<li><a href="#离散型傅里叶变换"><span class="toc-section-number">1.1</span> 离散型傅里叶变换</a></li>
+<li><a href="#快速傅里叶变换"><span class="toc-section-number">1.2</span> 快速傅里叶变换</a></li>
+</ul></li>
+<li><a href="#references"><span class="toc-section-number">2</span> References</a></li>
+</ul>
+</div>
+
+<div id="傅里叶变换" class="section level1">
+<h1><span class="header-section-number">1</span> 傅里叶变换</h1>
+<pre class="c"><code>#include &lt;stdio.h&gt;
+int main(void)
+{
+  printf(&quot;Hello world!&quot;),
+  return 0;
+}</code></pre>
+<pre class="r"><code>wave.3 &lt;- 0.5 * wave.1 + 0.25 * wave.2
+plot(xs,wave.3,type=&quot;l&quot;) 
+title(&quot;Eg complex wave&quot;)
+abline(h=0,lty=3)
+
+repeat.xs     &lt;- seq(-2*pi,0,pi/100)
+wave.3.repeat &lt;- 0.5*sin(3*repeat.xs) + 0.25*sin(10*repeat.xs)
+plot(xs,wave.3,type=&quot;l&quot;) 
+title(&quot;Repeating pattern&quot;)
+points(repeat.xs,wave.3.repeat,type=&quot;l&quot;,col=&quot;red&quot;) 
+abline(h=0,v=c(-2*pi,0),lty=3)</code></pre>
+<div id="离散型傅里叶变换" class="section level2">
+<h2><span class="header-section-number">1.1</span> 离散型傅里叶变换</h2>
+<p><strong>主要公式：</strong>
+<span class="math display">\[
+\begin{equation}
+X t=\frac{a_{0}}{2}+\sum_{i=1}^{m}\left[a_{i} \cos \left(\frac{2 \pi i}{N} t\right)+b_{i} \sin \left(\frac{2 \pi i}{N} t\right)\right]
+\end{equation}
+\]</span></p>
+<ul>
+<li><p>频率<span class="math inline">\(fs=1/T\)</span>，采样频率，单位时间发生的次数，单位为赫兹Hz。例如一般mp3音乐采样频率为44,100 Hz</p></li>
+<li><p>周期<span class="math inline">\(T=1/f\)</span></p></li>
+<li><p>角速度<span class="math inline">\(w = 2πf\)</span></p></li>
+</ul>
+</div>
+<div id="快速傅里叶变换" class="section level2">
+<h2><span class="header-section-number">1.2</span> 快速傅里叶变换</h2>
+<p><span class="math display">\[
+\begin{equation}
+x[i]=\sum_{k=0}^{N / 2} \operatorname{Re} \overline{X}[k] \cos (2 \pi k i / N)+\sum_{k=0}^{N / 2} \operatorname{Im} \overline{X}[k] \sin (2 \pi k i / N)
+\end{equation}
+\]</span></p>
+<p>其中<span class="math inline">\(\overline{X}[k]\)</span>是快速傅里叶变化的时间序列、<span class="math inline">\(k\)</span>为谐波数、<span class="math inline">\(i\)</span>代表时间、<span class="math inline">\(N\)</span>为时间序列的长度；</p>
+<p>令<span class="math inline">\(z_{i} = 2 \pi i / N\)</span>，则<code>Eq. 1</code>变身为：
+<span class="math display">\[
+\begin{equation}
+x[i]=\sum_{k=0}^{N / 2} \operatorname{Re} \overline{X}[k] \cos (k z_i)+\sum_{k=0}^{N / 2} \operatorname{Im} \overline{X}[k] \sin (k z_i)
+\end{equation}
+\]</span></p>
+<p>其中
+<span class="math display">\[
+\begin{equation}
+\begin{array}{l}{
+\operatorname{Re} \overline{X}[k]=\frac{\operatorname{Re} X[k]}{N / 2}}, 
+a_n= \operatorname{Re} \overline{X}\\ 
+{\operatorname{Im} \overline{X}[k]=-\frac{\operatorname{Im} X[k]}{N / 2}}, 
+b_n= \operatorname{Im} \overline{X}\end{array}
+\end{equation}
+\]</span></p>
+<p>当$k=0, or N/2 $时
+<span class="math display">\[
+\begin{equation}
+\begin{aligned} \operatorname{Re} \overline{X}[0] &amp;=\frac{\operatorname{Re} X[0]}{N} \\ \operatorname{Re} \overline{X}[N / 2] &amp;=\frac{\operatorname{Re} X[N / 2]}{N} \end{aligned}
+\end{equation}
+\]</span></p>
+</div>
+</div>
+<div id="references" class="section level1">
+<h1><span class="header-section-number">2</span> References</h1>
+<ul>
+<li><a href="https://blog.csdn.net/v_JULY_v/article/details/6196862">十、从头到尾彻底理解傅里叶变换算法、上</a></li>
+</ul>
+</div>
